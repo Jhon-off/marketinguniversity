@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketingUniversity</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Toastify for notifications -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style id="app-style">
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Un azul muy claro para el fondo */
+            color: #2d3748; /* Texto oscuro para contraste */
+        }
+
+        /* Custom Styles for product cards and modals */
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .product-card:hover .overlay {
+            opacity: 1;
+        }
+        
+        .category-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 10;
+        }
+        
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .shimmer {
+            background: linear-gradient(90deg, #e2e8f0 0%, #cbd5e0 50%, #e2e8f0 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #a0aec0;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #718096;
+            border-radius: 4px;
+        }
+
+        /* Responsive product grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1.5rem; /* Increased gap for better spacing */
+        }
+        
+        @media (min-width: 640px) {
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .product-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        @media (min-width: 1280px) {
+            .product-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-lg sticky top-0 z-30 rounded-b-xl">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <i class="fas fa-utensils text-3xl text-emerald-600 mr-3"></i>
+                    <span class="text-2xl font-extrabold text-gray-800">MarketingUniversity</span>
+                </div>
+                
+                <!-- Search input -->
+                <div class="relative w-full md:w-80">
+                    <input type="text" id="search-input" placeholder="Buscar productos..." class="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-full focus:outline-none focus:ring-3 focus:ring-emerald-300 transition-all duration-200 shadow-sm">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Category Filter Buttons -->
+    <div class="bg-gradient-to-r from-emerald-500 to-teal-600 shadow-md py-4 px-6 md:px-12 mb-10 rounded-b-xl">
+        <div class="container mx-auto flex flex-wrap justify-center gap-4">
+            <button class="category-button px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-white text-emerald-700 shadow-md" data-category="all">Todas las categorías</button>
+            <button class="category-button px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-emerald-100 text-emerald-800 hover:bg-emerald-200" data-category="sartenes">Sartenes</button>
+            <button class="category-button px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-emerald-100 text-emerald-800 hover:bg-emerald-200" data-category="ollas">Ollas y Lecheros</button>
+            <button class="category-button px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-emerald-100 text-emerald-800 hover:bg-emerald-200" data-category="electrodomesticos">Electrodomésticos</button>
+            <button class="category-button px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-emerald-100 text-emerald-800 hover:bg-emerald-200" data-category="tazones">Tazones y Platos</button>
+            <button class="category-button px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-emerald-100 text-emerald-800 hover:bg-emerald-200" data-category="cristaleria">Vasos y Copas</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">Explora Nuestros Productos</h1>
+
+        <!-- Filters tags -->
+        <div id="active-filters" class="flex flex-wrap justify-center gap-3 mb-8 hidden">
+            <!-- Active filters will appear here -->
+        </div>
+        
+        <!-- Product grid -->
+        <div class="product-grid mb-12" id="product-grid">
+            <!-- Shimmer loading placeholders -->
+            <div class="shimmer h-64 rounded-xl"></div>
+            <div class="shimmer h-64 rounded-xl"></div>
+            <div class="shimmer h-64 rounded-xl"></div>
+            <div class="shimmer h-64 rounded-xl"></div>
+            <div class="shimmer h-64 rounded-xl"></div>
+            <div class="shimmer h-64 rounded-xl"></div>
+        </div>
+        
+        <!-- No results message -->
+        <div id="no-results" class="hidden text-center py-20">
+            <i class="fas fa-search text-6xl text-gray-300 mb-6"></i>
+            <h2 class="text-3xl font-bold text-gray-600 mb-3">¡Vaya! No encontramos lo que buscas.</h2>
+            <p class="text-gray-500 text-lg">Intenta ajustar tu búsqueda o selecciona otra categoría.</p>
+        </div>
+    </main>
+    
+    <!-- Product Detail Modal -->
+    <div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden modal p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
+            <div class="w-full md:w-1/2 bg-gray-50 flex items-center justify-center p-6 rounded-l-xl">
+                <img id="detail-image" class="max-w-full max-h-[400px] object-contain rounded-lg shadow-md" src="" alt="Product image">
+            </div>
+            <div class="w-full md:w-1/2 p-8 flex flex-col relative">
+                <button id="close-detail-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl focus:outline-none transition-colors">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+                
+                <div class="mb-4">
+                    <span id="detail-category" class="px-3 py-1 text-sm font-semibold rounded-full bg-emerald-100 text-emerald-800"></span>
+                </div>
+                
+                <h2 id="detail-title" class="text-3xl font-extrabold text-gray-800 mt-2 mb-3"></h2>
+                <p id="detail-description" class="text-gray-700 text-base leading-relaxed mb-6"></p>
+                
+                <div class="flex items-baseline mb-6">
+                    <span id="detail-price" class="text-3xl font-bold text-emerald-700 mr-3"></span>
+                    <s id="detail-old-price" class="text-gray-500 text-lg"></s>
+                </div>
+                
+                <div class="mt-auto pt-6 border-t border-gray-200">
+                    <h3 class="text-sm font-semibold text-gray-600 mb-3">Etiquetas:</h3>
+                    <div id="detail-tags" class="flex flex-wrap gap-2 mb-6"></div>
+                    
+                    <div class="flex justify-between items-center">
+                        <button id="prev-product" class="text-gray-600 hover:text-emerald-700 text-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+                            <i class="fas fa-chevron-left mr-2"></i> Anterior
+                        </button>
+                        <button id="next-product" class="text-gray-600 hover:text-emerald-700 text-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+                            Siguiente <i class="fas fa-chevron-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 px-6 md:px-12 mt-12 rounded-t-xl">
+        <div class="container mx-auto text-center text-sm">
+            <p class="mb-3">&copy; 2025 MarketingUniversity. Todos los derechos reservados.</p>
+            <div class="flex justify-center mt-3 space-x-6 text-xl">
+                <a href="javascript:void(0)" class="text-gray-400 hover:text-blue-400 transition-colors">
+                    <i class="fab fa-facebook"></i>
+                </a>
+                <a href="javascript:void(0)" class="text-gray-400 hover:text-sky-400 transition-colors">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="javascript:void(0)" class="text-gray-400 hover:text-pink-500 transition-colors">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="javascript:void(0)" class="text-gray-400 hover:text-emerald-400 transition-colors">
+                    <i class="far fa-envelope"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script id="app-script">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Product data with LOCAL image paths using original filenames
+            let products = [
+                // Sartenes
+                { id: 1, title: "Sartén de Teflón AF565-20", category: "sartenes", tags: ["teflón", "cocina", "antiadherente"], imageUrl: "images/Sartén de Teflón AF565-20.jpg", price: "Q28.30 c/u", description: "Diámetro: 20 cms. Alto: 4.7 cms. 12 pcs x caja." },
+                { id: 2, title: "Sartén de Teflón AF565-28", category: "sartenes", tags: ["teflón", "cocina", "antiadherente"], imageUrl: "images/Sartén de Teflón AF565-28.jpg", price: "Q45.00 c/u", description: "Diámetro: 28 cms. Alto: 5.5 cms. 12 pcs x caja." },
+                { id: 3, title: "Sartén Antiadherente No.18", category: "sartenes", tags: ["antiadherente", "baquelita", "cocina"], imageUrl: "images/Sartén Antiadherente No.18.jpg", price: "Q28.00 c/u", description: "Mango de Baquelita. Diámetro: 18 cms. Alto: 5 cms. 24 pcs x caja." },
+                { id: 4, title: "Sartén de Teflón AF565-26", category: "sartenes", tags: ["teflón", "cocina", "antiadherente"], imageUrl: "images/Sartén de Teflón AF565-26.jpg", price: "Q38.50 c/u", description: "Diámetro: 26 cms. Alto: 5 cms. 12 pcs x caja." },
+                { id: 5, title: "Sartén de Teflón AF565-30", category: "sartenes", tags: ["teflón", "cocina", "antiadherente"], imageUrl: "images/Sartén de Teflón AF565-30.jpg", price: "Q49.50 c/u", description: "Diámetro: 30 cms. Alto: 5.5 cms. 12 pcs x caja." },
+                { id: 6, title: "Sartén de Teflón AF565-32", category: "sartenes", tags: ["teflón", "cocina", "antiadherente"], imageUrl: "images/Sartén de Teflón AF565-32.jpg", price: "Q59.00 c/u", description: "Diámetro: 32 cms. Alto: 5.5 cms. 12 pcs x caja." },
+
+                // Ollas y Lecheros
+                { id: 7, title: "Set de Ollas RT-5014B", category: "ollas", tags: ["acero inoxidable", "set", "cocina"], imageUrl: "images/Set de Ollas RT-5014B.jpg", price: "Q495.00 c/u", description: "Set de 14 piezas Acero Inoxidable. Mango de Colores. Diámetro Ollas: 16,18,20,24 cms. Cacerola: 16 cms. Sartén: 24 cms. Jarrilla: 3.5 Ltr. 2 Set x caja." },
+                { id: 8, title: "Olla Reina No.20", category: "ollas", tags: ["olla", "reina", "cocina"], imageUrl: "images/Olla Reina No.20.jpg", price: "Q69.00 c/u", description: "Capacidad: 4 Ltr. Diámetro: 20 cms. Alto: 14 cms." },
+                { id: 9, title: "Olla Reina No.30", category: "ollas", tags: ["olla", "reina", "grande"], imageUrl: "images/Olla Reina No.30.jpg", price: "Q138.00 c/u", description: "Capacidad: 12 Ltr. Diámetro: 30 cms. Alto: 20 cms. 8 pcs x caja." },
+                { id: 10, title: "Olla Reina con Orejas Tapan No.12", category: "ollas", tags: ["olla", "tapa", "pequeña"], imageUrl: "images/Olla Reina con Orejas Tapan No.12.jpg", price: "Q43.00 c/u", description: "Capacidad: 0.67 Ltr. 16 piezas x caja." },
+                { id: 11, title: "Juego de Ollas CY-14P", category: "ollas", tags: ["mármol", "difusor de calor", "rosada"], imageUrl: "images/Juego de Ollas CY-14P.jpg", price: "Q795.00 c/u", description: "Mármol con Difusor de Calor. Color Rosada. Diámetro: 18,20,22,24,26,28,30 cms. Incluye Desarmador. 2 set x caja." },
+                { id: 12, title: "Olla Reina No.22", category: "ollas", tags: ["olla", "reina", "mediana"], imageUrl: "images/Olla Reina No.22.jpg", price: "Q80.00 c/u", description: "Capacidad: 4.5 Ltr. Diámetro: 22 cms. Alto: 18 cms. 16 pcs x caja." },
+                { id: 13, title: "Olla Reina con Orejas Tapan No.28", category: "ollas", tags: ["olla", "tapa", "grande"], imageUrl: "images/Olla Reina con Orejas Tapan No.28.jpg", price: "Q125.00 c/u", description: "Capacidad: 10 Ltr. 12 piezas x caja." },
+                { id: 14, title: "Lechero Peltrum L14CFN", category: "ollas", tags: ["lechero", "peltre", "celeste"], imageUrl: "images/Lechero Peltrum L14CFN.jpg", price: "Q28.00 c/u", description: "Color: Celeste Filo Negro. Capacidad: 40 onz. Diámetro: 6 plg. Alto: 4 plg." },
+                { id: 15, title: "Lechero No.20 L20BL", category: "ollas", tags: ["lechero", "blanco", "rojo"], imageUrl: "images/Lechero No.20 L20BL.jpg", price: "Q48.00 c/u", description: "Color: Blanco Adentro y Rojo Afuera. Capacidad: 96 onz (3 Ltr.). Diámetro: 8.5 plg. Alto: 5.5 plg." },
+                { id: 16, title: "Olla Reina con Orejas Tapan No.14", category: "ollas", tags: ["olla", "tapa", "pequeña"], imageUrl: "images/Olla Reina con Orejas Tapan No.14.jpg", price: "Q49.00 c/u", description: "Capacidad: 1.23 Ltr. 24 piezas x caja." },
+                { id: 17, title: "Olla Reina con Orejas Tapan No.24", category: "ollas", tags: ["olla", "tapa", "mediana"], imageUrl: "images/Olla Reina con Orejas Tapan No.24.jpg", price: "Q90.00 c/u", description: "Capacidad: 5 Ltr. 16 piezas x caja." },
+                { id: 18, title: "Olla Reina No.16", category: "ollas", tags: ["olla", "reina", "pequeña"], imageUrl: "images/Olla Reina No.16.jpg", price: "Q57.00 c/u", description: "Capacidad: 2.10 Ltr. Diámetro: 16 cms. Alto: 12 cms." },
+                { id: 19, title: "Juego de Ollas CY-14B", category: "ollas", tags: ["mármol", "difusor de calor", "beige"], imageUrl: "images/Juego de Ollas CY-14B.jpg", price: "Q795.00 c/u", description: "Mármol con Difusor de Calor. Tapas de Vidrio. Color Beige. Diámetro: 18,20,22,24,26,28,30 cms. Incluye Desarmador. 2 set x caja." },
+                { id: 20, title: "Olla Reina con Orejas Tapan No.26", category: "ollas", tags: ["olla", "tapa", "grande"], imageUrl: "images/Olla Reina con Orejas Tapan No.26.jpg", price: "Q110.00 c/u", description: "Capacidad: 8 Ltr. 12 piezas x caja." },
+                { id: 21, title: "Lechero Peltre L16CFN", category: "ollas", tags: ["lechero", "peltre", "celeste"], imageUrl: "images/Lechero Peltre L16CFN.jpg", price: "Q34.00 c/u", description: "Color: Celeste Filo Negro. Capacidad: 64 onz. (1.89 Ltr). Diámetro: 7 plg. Alto: 5 plg." },
+                { id: 22, title: "Set de 11 piezas Mármol AL-911G-RE", category: "ollas", tags: ["mármol", "set", "rojo", "azul", "negro"], imageUrl: "images/Set de 11 piezas Mármol AL-911G-RE.jpg", price: "Q650.00 c/u", description: "Color: Rojo, Azul, Negro. Diámetro Ollas: 20,22,24,26,28 cms. Sartén: 20 cms. 2 set x caja." },
+
+                // Electrodomésticos
+                { id: 23, title: "Microondas PI0020MWN", category: "electrodomesticos", tags: ["microondas", "negro", "cocina"], imageUrl: "images/Microondas PI0020MWN.jpg", price: "Q575.00 c/u", description: "0.7 pies cúbicos. 700 Watts. Color Negro. Ancho: 17.5x11.5 plg. Alto: 10 plg." },
+                { id: 24, title: "Microondas PI0020MWB", category: "electrodomesticos", tags: ["microondas", "blanco", "cocina"], imageUrl: "images/Microondas PI0020MWB.jpg", price: "Q565.00 c/u", description: "0.7 pies cúbicos. 700 Watts. Color Blanco. Ancho: 17.5x11.5 plg. Alto: 10 plg." },
+                { id: 25, title: "Licuadora ICE CRUSH BL2209PB-LA", category: "electrodomesticos", tags: ["licuadora", "hielo", "gris"], imageUrl: "images/Licuadora ICE CRUSH BL2209PB-LA.jpg", price: "Q295.00 c/u", description: "Jarra Plástica. Color Gris. 8 Velocidades más Pulso. Cuchilla Acero Inoxidable 6 puntas. Capacidad: 1.65 Ltr." },
+
+                // Tazones y Platos
+                { id: 26, title: "Set de 2 Tazones en Caja Decorada Pad Printed", category: "tazones", tags: ["tazones", "set", "decorado"], imageUrl: "images/Set de 2 Tazones en Caja Decorada Pad Printed.jpg", price: "Q19.00 c/u", description: "Capacidad: 10 onz. 50 set x caja." },
+                { id: 27, title: "Set de 6 Tazones en Caja Decorada Pad Printed", category: "tazones", tags: ["tazones", "set", "decorado"], imageUrl: "images/Set de 6 Tazones en Caja Decorada Pad Printed.jpg", price: "Q54.00 c/u", description: "Capacidad: 10 onz. Diámetro: 4.5 plg. 20 set x caja." },
+                { id: 28, title: "Set de 4 Tazones con Caja Decorada Pad Printed", category: "tazones", tags: ["tazones", "set", "decorado"], imageUrl: "images/Set de 4 Tazones con Caja Decorada Pad Printed.jpg", price: "Q36.00 c/u", description: "Capacidad: 10 onz. Diámetro: 4.5 plg. 20 set x caja." },
+                { id: 29, title: "Set de 6 Tazones Diseño de Osos", category: "tazones", tags: ["tazones", "set", "osos", "decorado"], imageUrl: "images/Set de 6 Tazones Diseño de Osos.jpg", price: "Q54.00 c/u", description: "Caja Decorada Pad Printed. Capacidad: 10 onz. Diámetro: 4.5 plg. 20 set x caja." },
+                { id: 30, title: "Set de 4 Tazones + 2 Platos", category: "tazones", tags: ["tazones", "platos", "set", "decorado"], imageUrl: "images/Set de 4 Tazones + 2 Platos.jpg", price: "Q98.00 c/u", description: "Caja Decorada Pad Printed. Diámetro Tazones: 4.5 plg. Diámetro Platos: 8 plg. 10 set x caja." },
+                { id: 31, title: "Set de 4 Tazones + 1 Plato", category: "tazones", tags: ["tazones", "plato", "set", "decorado"], imageUrl: "images/Set de 4 Tazones + 1 Plato.jpg", price: "Q65.00 c/u", description: "Caja Decorada Pad Printed. Tazones Diámetro: 4.5 plg. Plato Diámetro: 8 plg. 20 set x caja." },
+                { id: 32, title: "Set de 2 Tazones de Loza Tapa Plástica Cierre a Presión", category: "tazones", tags: ["tazones", "loza", "tapa", "cierre a presión"], imageUrl: "images/Set de 2 Tazones de Loza Tapa Plástica Cierre a Presión.jpg", price: "Q29.00 c/u", description: "Capacidad: 16 onz. Diámetro: 4.5 plg. 30 set x caja." },
+                { id: 33, title: "Set de 2 Tazones Caja Decorada Horse", category: "tazones", tags: ["tazones", "set", "caballos", "decorado"], imageUrl: "images/Set de 2 Tazones Caja Decorada Horse.jpg", price: "Q19.00 c/u", description: "Capacidad: 10 onz. Diámetro: 4.5 plg. 50 piezas x caja." },
+                { id: 34, title: "Set de 2 Tazones Cereal Caja Decorada Pad Printed", category: "tazones", tags: ["tazones", "cereal", "set", "decorado"], imageUrl: "images/Set de 2 Tazones Cereal Caja Decorada Pad Printed.jpg", price: "Q19.00 c/u", description: "Capacidad: 10 onz. Diámetro: 4.5 plg. 50 set x caja." },
+                { id: 35, title: "Set de 2 Tazones Diseño Flores Caja Decorada Pad Printed", category: "tazones", tags: ["tazones", "flores", "set", "decorado"], imageUrl: "images/Set de 2 Tazones Diseño Flores Caja Decorada Pad Printed.jpg", price: "Q19.00 c/u", description: "Capacidad: 10 onz. Diámetro: 4.5 plg. 50 set x caja." },
+                { id: 36, title: "Set de 4 Tazones Cereal Caja Decorada Pad Printed", category: "tazones", tags: ["tazones", "cereal", "set", "decorado"], imageUrl: "images/Set de 4 Tazones Cereal Caja Decorada Pad Printed.jpg", price: "Q36.00 c/u", description: "Capacidad: 10 onz. Diámetro: 4.5 plg. 20 set x caja." },
+                { id: 37, title: "Set de 6 Tazones Cereal Caja Decorada Pad Printed", category: "tazones", tags: ["tazones", "cereal", "set", "decorado"], imageUrl: "images/Set de 6 Tazones Cereal Caja Decorada Pad Printed.jpg", price: "Q54.00 c/u", description: "Capacidad: 10 onz. Diámetro: 4.5 plg. 20 set x caja." },
+                { id: 38, title: "Set de 2 Tazones Caja Decorada Pad Printed", category: "tazones", tags: ["tazones", "set", "decorado"], imageUrl: "images/Set de 2 Tazones Caja Decorada Pad Printed.jpg", price: "Q19.00 c/u", description: "Capacidad: 10 onz. Diámetro: 4.5 plg. 50 set x caja." },
+
+                // Vasos y Copas (Cristalería)
+                { id: 39, title: "Vaso Conil 47 RT V0224", category: "cristaleria", tags: ["vaso", "conil", "vidrio"], imageUrl: "images/Vaso Conil 47 RT V0224.jpg", price: "Q6.00 c/u", oldPrice: "Q13.50 c/u", description: "Capacidad: 16 Onz. Diámetro: 8.65 cms. Alto: 14.5 cms. 12 pcs x caja." },
+                { id: 40, title: "Copa XAREL V0201", category: "cristaleria", tags: ["copa", "xarel", "vidrio"], imageUrl: "images/Copa XAREL V0201.jpg", price: "Q6.00 c/u", oldPrice: "Q10.00 c/u", description: "Capacidad: 5.75 Onz. Diámetro: 5 cms. Alto: 22.1 cms. 12 pcs x caja." },
+                { id: 41, title: "Vaso PINOT 47 R V0242", category: "cristaleria", tags: ["vaso", "pinot", "vidrio"], imageUrl: "images/Vaso PINOT 47 R V0242.jpg", price: "Q5.00 c/u", oldPrice: "Q9.75 c/u", description: "Capacidad: 15.75 Onz. Diámetro: 8.7 cms. Alto: 10.95 cms. 6 pcs x caja." },
+                { id: 42, title: "Copa Breval 16 CL V0792", category: "cristaleria", tags: ["copa", "breval", "vidrio"], imageUrl: "images/Copa Breval 16 CL V0792.jpg", price: "Q7.75 c/u", oldPrice: "Q14.50 c/u", description: "Capacidad: 5.5 Onz. Diámetro: 5.65 cms. Alto: 17 cms. 12 pcs x caja." },
+                { id: 43, title: "Vaso Conil 33 T V0223", category: "cristaleria", tags: ["vaso", "conil", "vidrio"], imageUrl: "images/Vaso Conil 33 T V0223.jpg", price: "Q4.50 c/u", oldPrice: "Q9.25 c/u", description: "Capacidad: 11 Onz. Diámetro: 7.65 cms. Alto: 13.4 cms. 12 pcs x caja." },
+                { id: 44, title: "Copa Mencia 25 CL V0262", category: "cristaleria", tags: ["copa", "mencia", "vidrio templado"], imageUrl: "images/Copa Mencia 25 CL V0262.jpg", price: "Q8.00 c/u", oldPrice: "Q16.00 c/u", description: "Vidrio templado, 100% Español. Capacidad: 8.25 onz. Altura: 19.2 cms. Diámetro: 7.15 cms. 6 pcs x caja." },
+                { id: 45, title: "Copa Malta 44 T V0273", category: "cristaleria", tags: ["copa", "malta", "vidrio"], imageUrl: "images/Copa Malta 44 T V0273.jpg", price: "Q9.50 c/u", oldPrice: "Q18.25 c/u", description: "Capacidad: 14.75 Onz. Diámetro: 8.7 cms. Alto: 15.75 cms. 6 pcs x caja." },
+                { id: 46, title: "Copa Margarita 27 V1099", category: "cristaleria", tags: ["copa", "margarita", "vidrio"], imageUrl: "images/Copa Margarita 27 V1099.jpg", price: "Q12.50 c/u", oldPrice: "Q24.50 c/u", description: "Capacidad: 9 onz. Diámetro: 16.4 cms. Alto: 10.9 cms. 6 pcs x caja." },
+                { id: 47, title: "Copa Catavinos 21CL V0247", category: "cristaleria", tags: ["copa", "catavinos", "vidrio"], imageUrl: "images/Copa Catavinos 21CL V0247.jpg", price: "Q8.00 c/u", oldPrice: "Q14.50 c/u", description: "Capacidad: 7 onz. Diámetro: 6.5 cms. Alto: 15.5 cms. 6 pcs x caja." },
+                { id: 48, title: "Vaso Refresquero Ring RNG363", category: "cristaleria", tags: ["vaso", "refresquero", "vidrio"], imageUrl: "images/Vaso Refresquero Ring RNG363.jpg", price: "Q3.00 c/u", oldPrice: "Q8.00 c/u", description: "Capacidad: 350 ml. 48 pcs x caja." },
+                { id: 49, title: "Copa LONDON 64 R V0219", category: "cristaleria", tags: ["copa", "london", "vidrio"], imageUrl: "images/Copa LONDON 64 R V0219.jpg", price: "Q11.00 c/u", oldPrice: "Q21.25 c/u", description: "Capacidad: 21.5 Onz. Diámetro: 10.1 cms. Alto: 10.1 cms. 6 pcs x caja." },
+                { id: 50, title: "Copa Mencia 31 RT V0263", category: "cristaleria", tags: ["copa", "mencia", "vidrio"], imageUrl: "images/Copa Mencia 31 RT V0263.jpg", price: "Q11.00 c/u", oldPrice: "Q21.50 c/u", description: "Capacidad: 10.25 Onz. Diámetro: 7.72 cms. Alto: 20.8 cms. 6 pcs x caja." },
+                { id: 51, title: "Vaso con Pajilla de Vidrio Tapa de Bambú 98819007", category: "cristaleria", tags: ["vaso", "pajilla", "bambú"], imageUrl: "images/Vaso con Pajilla de Vidrio Tapa de Bambú 98819007.jpg", price: "Q19.00 c/u", description: "Capacidad: 450 ml. 97 piezas x caja." },
+                { id: 52, title: "Copa Victoria 47 Corte Fino V01092", category: "cristaleria", tags: ["copa", "victoria", "corte fino"], imageUrl: "images/Copa Victoria 47 Corte Fino V01092.jpg", price: "Q16.00 c/u", oldPrice: "Q31.00 c/u", description: "Capacidad: 15.75 Onz. Diámetro: 8.65 cms. Alto: 22.1 cms. 6 pcs x caja." },
+                { id: 53, title: "Copa Platine 25 Corte Fino V01085", category: "cristaleria", tags: ["copa", "platine", "corte fino"], imageUrl: "images/Copa Platine 25 Corte Fino V01085.jpg", price: "Q14.00 c/u", oldPrice: "Q27.00 c/u", description: "Capacidad: 8.0 onz. Altura: 18.2 cms. Diámetro: 7.15 cms. 6 pcs x caja." },
+                { id: 54, title: "Copa Merlot 19T V0100", category: "cristaleria", tags: ["copa", "merlot", "vidrio"], imageUrl: "images/Copa Merlot 19T V0100.jpg", price: "Q6.00 c/u", oldPrice: "Q12.00 c/u", description: "Capacidad: 6.26 onz. Diámetro: 6.95 cms. Alto: 16.8 cms. 12 pcs x caja." },
+                // Nuevos productos de cristalería agregados con nombres de archivo de la captura
+                { id: 55, title: "Copa Victoria 58 CL Corte Fino", category: "cristaleria", tags: ["copa", "victoria", "corte fino"], imageUrl: "images/Copa Victoria 58 CL Corte Fino.jpg", price: "Q15.50 c/u", oldPrice: "Q31.00 c/u", description: "Capacidad: 19.5 Onz. Diámetro: 9.3 cms. Alto: 23 cms. 6 pcs x caja." },
+                { id: 56, title: "Vaso Tequilero CHUPITO 4CL", category: "cristaleria", tags: ["vaso", "tequilero", "chupito"], imageUrl: "images/Vaso Tequilero CHUPITO 4CL.jpg", price: "Q3.00 c/u", oldPrice: "Q5.75 c/u", description: "Capacidad: 1.5 Onz. Diámetro: 4.65 cms. Alto: 4.7 cms. 12 pcs x caja." },
+                { id: 57, title: "Vaso Aran 35 FB cl", category: "cristaleria", tags: ["vaso", "aran", "vidrio templado"], imageUrl: "images/Vaso Aran 35 FB cl.jpg", price: "Q9.50 c/u", oldPrice: "Q15.00 c/u", description: "Vidrio templado. Vidrio 100% Español. Capacidad: 12 onz. Altura: 10 cms. Diámetro: 9.6 cms. 12 pcs x caja." },
+                { id: 58, title: "Dulcera o Bombonera Recta de Vidrio con Tapa (1 Ltr.)", category: "cristaleria", tags: ["dulcera", "bombonera", "vidrio", "tapa"], imageUrl: "images/Dulcera o Bombonera Recta de Vidrio con Tapa (1 Ltr.).jpg", price: "Q20.00 c/u", description: "Capacidad: 1 Ltr. 24 piezas x caja." },
+                { id: 59, title: "Copa Merlot 23R", category: "cristaleria", tags: ["copa", "merlot", "vidrio"], imageUrl: "images/Copa Merlot 23R.jpg", price: "Q6.00 c/u", oldPrice: "Q12.50 c/u", description: "Capacidad: 8 onz. Diámetro: 7.5 cms. Alto: 17.4 cms. 12 pcs x caja." },
+                { id: 60, title: "Vaso Tequilero AIALA 6 CL", category: "cristaleria", tags: ["vaso", "tequilero", "aiala"], imageUrl: "images/Vaso Tequilero AIALA 6 CL.jpg", price: "Q3.50 c/u", oldPrice: "Q6.75 c/u", description: "Capacidad: 2 Onz. Diámetro: 3.75 cms. Alto: 10.4 cms. 12 pcs x caja." },
+                { id: 61, title: "Dulcera o Bombonera Recta Tapa de Vidrio (0.65 Ltr.)", category: "cristaleria", tags: ["dulcera", "bombonera", "vidrio", "tapa"], imageUrl: "images/Dulcera o Bombonera Recta Tapa de Vidrio (0.65 Ltr.).jpg", price: "Q15.00 c/u", description: "Capacidad: 0.65 Ltr. 36 piezas x caja." },
+                { id: 62, title: "Vaso Isaba 42R cl", category: "cristaleria", tags: ["vaso", "isaba", "vidrio templado"], imageUrl: "images/Vaso Isaba 42R cl.jpg", price: "Q6.00 c/u", oldPrice: "Q12.00 c/u", description: "Vidrio templado. Vidrio 100% Español. Capacidad: 14 onz. Altura: 12.4 cms. Diámetro: 8.6 cms. 6 pcs x caja." },
+                { id: 63, title: "Vaso Syrah 35 T", category: "cristaleria", tags: ["vaso", "syrah", "vidrio"], imageUrl: "images/Vaso Syrah 35 T.jpg", price: "Q6.00 c/u", oldPrice: "Q10.75 c/u", description: "Capacidad: 11.75 Onz. Diámetro: 9.9 cms. Alto: 11.75 cms. 6 pcs x caja." },
+                { id: 64, title: "Copa Platine 31 Corte Fino", category: "cristaleria", tags: ["copa", "platine", "corte fino"], imageUrl: "images/Copa Platine 31 Corte Fino.jpg", price: "Q14.00 c/u", oldPrice: "Q28.00 c/u", description: "Capacidad: 10 Onz. Diámetro: 7.72 cms. Alto: 20 cms. 6 pcs x caja." }
+            ];
+
+            // DOM elements
+            const productGrid = document.getElementById('product-grid');
+            const searchInput = document.getElementById('search-input');
+            const categoryButtonsContainer = document.querySelector('.flex.flex-wrap.justify-center.gap-4'); // Select the container for category buttons
+            const noResults = document.getElementById('no-results');
+            const activeFilters = document.getElementById('active-filters');
+            
+            const detailModal = document.getElementById('detail-modal');
+            const closeDetailModal = document.getElementById('close-detail-modal');
+            const detailImage = document.getElementById('detail-image');
+            const detailTitle = document.getElementById('detail-title');
+            const detailCategory = document.getElementById('detail-category');
+            const detailDescription = document.getElementById('detail-description');
+            const detailPrice = document.getElementById('detail-price');
+            const detailOldPrice = document.getElementById('detail-old-price');
+            const detailTags = document.getElementById('detail-tags');
+            const prevProductBtn = document.getElementById('prev-product');
+            const nextProductBtn = document.getElementById('next-product');
+            
+            let currentProducts = [...products];
+            let currentProductIndex = 0;
+            let currentCategoryFilter = 'all'; // Keep track of the currently selected category
+
+            // Load initial state from localStorage
+            const loadSavedState = () => {
+                try {
+                    const savedSearch = localStorage.getItem('catalogSearch') || '';
+                    const savedCategory = localStorage.getItem('catalogCategory') || 'all';
+                    const savedScrollPosition = localStorage.getItem('catalogScrollPosition') || 0;
+                    
+                    searchInput.value = savedSearch;
+                    currentCategoryFilter = savedCategory; // Update current category filter
+                    
+                    // Highlight the active category button
+                    highlightCategoryButton(currentCategoryFilter);
+
+                    // Wait for products to load before scrolling
+                    setTimeout(() => {
+                        window.scrollTo(0, savedScrollPosition);
+                    }, 100);
+                    
+                    // Apply filters
+                    applyFilters();
+                } catch (error) {
+                    console.error('Error loading saved state:', error);
+                }
+            };
+            
+            // Save state to localStorage
+            const saveState = () => {
+                try {
+                    localStorage.setItem('catalogSearch', searchInput.value);
+                    localStorage.setItem('catalogCategory', currentCategoryFilter); // Save current category filter
+                    localStorage.setItem('catalogScrollPosition', window.scrollY);
+                } catch (error) {
+                    console.error('Error saving state:', error);
+                }
+            };
+
+            // Highlight the active category button
+            const highlightCategoryButton = (activeCategory) => {
+                const buttons = categoryButtonsContainer.querySelectorAll('.category-button');
+                buttons.forEach(button => {
+                    if (button.dataset.category === activeCategory) {
+                        button.classList.remove('bg-emerald-100', 'text-emerald-800', 'hover:bg-emerald-200');
+                        button.classList.add('bg-white', 'text-emerald-700', 'shadow-md');
+                    } else {
+                        button.classList.remove('bg-white', 'text-emerald-700', 'shadow-md');
+                        button.classList.add('bg-emerald-100', 'text-emerald-800', 'hover:bg-emerald-200');
+                    }
+                });
+            };
+            
+            // Update active filters display
+            const updateActiveFilters = () => {
+                activeFilters.innerHTML = '';
+                
+                const searchValue = searchInput.value.trim();
+                
+                if (searchValue) {
+                    const searchTag = document.createElement('div');
+                    searchTag.className = 'bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center';
+                    searchTag.innerHTML = `
+                        Búsqueda: ${searchValue}
+                        <button class="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none" data-filter-type="search">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    `;
+                    activeFilters.appendChild(searchTag);
+                }
+                
+                if (currentCategoryFilter && currentCategoryFilter !== 'all') {
+                    const categoryNamesMap = {
+                        sartenes: 'Sartenes',
+                        ollas: 'Ollas y Lecheros',
+                        electrodomesticos: 'Electrodomésticos',
+                        tazones: 'Tazones y Platos',
+                        cristaleria: 'Vasos y Copas'
+                    };
+                    
+                    const categoryTag = document.createElement('div');
+                    categoryTag.className = 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center';
+                    categoryTag.innerHTML = `
+                        Categoría: ${categoryNamesMap[currentCategoryFilter] || currentCategoryFilter}
+                        <button class="ml-2 text-green-500 hover:text-green-700 focus:outline-none" data-filter-type="category">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    `;
+                    activeFilters.appendChild(categoryTag);
+                }
+                
+                // Show/hide filters section
+                if (searchValue || (currentCategoryFilter && currentCategoryFilter !== 'all')) {
+                    activeFilters.classList.remove('hidden');
+                } else {
+                    activeFilters.classList.add('hidden');
+                }
+            };
+            
+            // Filter products
+            const applyFilters = () => {
+                const searchValue = searchInput.value.toLowerCase().trim();
+                
+                updateActiveFilters();
+                
+                currentProducts = products.filter(product => {
+                    // Category filter
+                    const matchCategory = currentCategoryFilter === 'all' || product.category === currentCategoryFilter;
+                    
+                    // Search filter
+                    const matchSearch = searchValue === '' || 
+                        product.title.toLowerCase().includes(searchValue) || 
+                        product.description.toLowerCase().includes(searchValue) ||
+                        product.tags.some(tag => tag.toLowerCase().includes(searchValue));
+                    
+                    return matchCategory && matchSearch;
+                });
+                
+                renderProducts();
+                saveState();
+            };
+            
+            // Render products to the grid
+            const renderProducts = () => {
+                productGrid.innerHTML = ''; // Clear existing products
+                
+                if (currentProducts.length === 0) {
+                    noResults.classList.remove('hidden');
+                    return;
+                }
+                
+                noResults.classList.add('hidden');
+                
+                const categoryColors = {
+                    sartenes: 'bg-red-100 text-red-800',
+                    ollas: 'bg-blue-100 text-blue-800',
+                    electrodomesticos: 'bg-yellow-100 text-yellow-800',
+                    tazones: 'bg-indigo-100 text-indigo-800', 
+                    cristaleria: 'bg-purple-100 text-purple-800'
+                };
+                
+                const categoryNamesMap = {
+                    sartenes: 'Sartenes',
+                    ollas: 'Ollas y Lecheros',
+                    electrodomesticos: 'Electrodomésticos',
+                    tazones: 'Tazones y Platos',
+                    cristaleria: 'Vasos y Copas'
+                };
+                
+                currentProducts.forEach((product, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card bg-white rounded-xl shadow-lg overflow-hidden relative transition duration-300 transform hover:scale-105 hover:shadow-xl';
+                    card.innerHTML = `
+                        <div class="category-badge ${categoryColors[product.category]} px-3 py-1 text-xs font-semibold rounded-full">
+                            ${categoryNamesMap[product.category]}
+                        </div>
+                        <div class="relative h-48 overflow-hidden">
+                            <img src="${product.imageUrl}" alt="${product.title}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/400x300/E2E8F0/A0AEC0?text=Imagen+no+disponible';">
+                            <div class="overlay absolute inset-0 flex items-center justify-center">
+                                <button class="view-product bg-white bg-opacity-90 text-emerald-600 hover:bg-emerald-700 hover:text-white px-5 py-2.5 rounded-full shadow-lg font-semibold transition-all duration-300 transform hover:scale-110" data-index="${index}">
+                                    <i class="fas fa-eye mr-2"></i> Ver detalle
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-5">
+                            <h3 class="font-bold text-gray-800 text-lg mb-2 truncate">${product.title}</h3>
+                            <p class="text-gray-600 text-sm mb-3 line-clamp-2">${product.description || ''}</p>
+                            <div class="flex items-baseline mb-2">
+                                <span class="text-xl font-extrabold text-emerald-700 mr-2">${product.price}</span>
+                                ${product.oldPrice ? `<s class="text-gray-500 text-base">${product.oldPrice}</s>` : ''}
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${product.tags.map(tag => `
+                                    <span class="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full text-xs font-medium">${tag}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    productGrid.appendChild(card);
+                    
+                    // Add click event for view product button
+                    const viewProductBtn = card.querySelector('.view-product');
+                    viewProductBtn.addEventListener('click', () => showProductDetails(parseInt(viewProductBtn.dataset.index)));
+                });
+            };
+            
+            // Show product details in modal
+            const showProductDetails = (index) => {
+                currentProductIndex = index;
+                const product = currentProducts[index];
+                
+                detailImage.src = product.imageUrl;
+                detailTitle.textContent = product.title;
+                detailDescription.textContent = product.description || '';
+                detailPrice.textContent = product.price;
+                if (product.oldPrice) {
+                    detailOldPrice.textContent = product.oldPrice;
+                    detailOldPrice.classList.remove('hidden');
+                } else {
+                    detailOldPrice.textContent = '';
+                    detailOldPrice.classList.add('hidden');
+                }
+                
+                const categoryColors = {
+                    sartenes: 'bg-red-100 text-red-800',
+                    ollas: 'bg-blue-100 text-blue-800',
+                    electrodomesticos: 'bg-yellow-100 text-yellow-800',
+                    tazones: 'bg-indigo-100 text-indigo-800',
+                    cristaleria: 'bg-purple-100 text-purple-800'
+                };
+                
+                const categoryNamesMap = {
+                    sartenes: 'Sartenes',
+                    ollas: 'Ollas y Lecheros',
+                    electrodomesticos: 'Electrodomésticos',
+                    tazones: 'Tazones y Platos',
+                    cristaleria: 'Vasos y Copas'
+                };
+                
+                detailCategory.className = `${categoryColors[product.category]} px-3 py-1 text-sm font-semibold rounded-full`;
+                detailCategory.textContent = categoryNamesMap[product.category];
+                
+                detailTags.innerHTML = '';
+                product.tags.forEach(tag => {
+                    const tagEl = document.createElement('span');
+                    tagEl.className = 'bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full text-xs font-medium';
+                    tagEl.textContent = tag;
+                    detailTags.appendChild(tagEl);
+                });
+                
+                // Update navigation buttons
+                prevProductBtn.disabled = index === 0;
+                nextProductBtn.disabled = index === currentProducts.length - 1;
+                
+                detailModal.classList.remove('hidden');
+            };
+            
+            // Event Listeners
+            searchInput.addEventListener('input', applyFilters);
+            
+            // Category button click event
+            categoryButtonsContainer.addEventListener('click', (e) => {
+                const clickedButton = e.target.closest('.category-button');
+                if (clickedButton) {
+                    currentCategoryFilter = clickedButton.dataset.category;
+                    highlightCategoryButton(currentCategoryFilter);
+                    applyFilters();
+                }
+            });
+            
+            // Active filters click events (remove filters)
+            activeFilters.addEventListener('click', (e) => {
+                if (e.target.closest('button')) {
+                    const button = e.target.closest('button');
+                    const filterType = button.dataset.filterType;
+                    
+                    if (filterType === 'search') {
+                        searchInput.value = '';
+                    } else if (filterType === 'category') {
+                        currentCategoryFilter = 'all';
+                        highlightCategoryButton('all');
+                    }
+                    
+                    applyFilters();
+                }
+            });
+            
+            // Detail modal navigation
+            prevProductBtn.addEventListener('click', () => {
+                if (currentProductIndex > 0) {
+                    showProductDetails(currentProductIndex - 1);
+                }
+            });
+            
+            nextProductBtn.addEventListener('click', () => {
+                if (currentProductIndex < currentProducts.length - 1) {
+                    showProductDetails(currentProductIndex + 1);
+                }
+            });
+            
+            // Close detail modal
+            closeDetailModal.addEventListener('click', () => {
+                detailModal.classList.add('hidden');
+            });
+            
+            // Initial load
+            loadSavedState();
+        });
+    </script>
+</body>
+</html>
